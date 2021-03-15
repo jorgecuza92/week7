@@ -36,10 +36,24 @@ function getAllTasks() {
     .then(response => response.json())
     .then(todo => {
       const todoItems = todo.map((task) => {
-        return `<li>${task.title} - ${task.priority} - ${task.dateCreated}</li>`
+        return `<li>${task.title} - ${task.priority} - ${task.dateCreated}</li>
+                <button onclick="#">remove task</button>`
+              
       })
       tasksUL.innerHTML = todoItems.join("")
     })
 }
 
 getAllTasks()
+
+
+function deleteTask() {
+  fetch('http://localhost:3001/todo/:title', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    
+  })
+
+}
