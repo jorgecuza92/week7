@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="tripstyles.css">
+    <title>Trips</title>
+  </head>
+  <body>
+    <h1>Trips</h1>
+      <ul>
+        {{#allTrips}}
+        <form>
+          
+          <li>
+            <img src="{{tripImage}}" alt="trip pic">
+            <label>{{destination}}</label>
+            <label>{{departure}}</label>
+            <label>{{arrival}}</label>
+            <button>delete</button>
+          </li>
+        </form>
+        {{/allTrips}}
+      </ul>
+    <a href="add-trip">Add another trip</a>
+  </body>
+
+<html>

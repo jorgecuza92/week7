@@ -1,0 +1,378 @@
+
+Week 7 Day 2 - Notes
+
+
+Assignment - To-Do List with Server
+
+
+There are packages that allow you to generate a unique ID, but you can also use the index of the task inside the array.  One such package is uuid.
+
+start of each project: npm init, npm install express, npm install cors
+
+app.js:
+
+const express = require('express')
+const app = express()
+
+app.listen(3000, () => {
+  console.log('Server is running...')
+
+})
+
+If using the uuid package:
+npm install uuid
+
+Remember to go look inside your package.json and make sure it's installed.
+
+Then:
+const { v4: uuidv4 } = require('uuid')
+
+app.get('/unique', (req,res) => {
+  res.send(uuidv4())
+})
+
+const todos = []
+
+app.post('/todos', (req, res) => {
+  const title = req.body.title
+  const priority = req.body.priority
+  
+  const task = {title: title, priority: priority, taskId: uuidv4()}
+
+  todos.push(task)
+
+  res.json({message: "Task has been added!"})
+})
+
+
+Ok, now how to point to an item to delete it?
+
+Create a get that returns all the to-dos:
+app.get('/todos', (req, res) => {
+  res.json(todos)
+})
+
+This should return the todos array. Now in Postman, let's try to add a task - but...it complains? Why?  We forgot the JSON parser.
+
+Above the rest of our code, we need:
+
+app.use(express.json())
+
+So now we can add tasks in Postman and see that it adds unique taskIDs to each.
+
+So...how do we delete?
+
+
+get/post/delete - these are the bones of a RESTful API structure 
+
+
+app.delete('/todos/:taskId', (req, res) => {
+  const taskId = req.params.taskId   // route parameter
+
+
+})
+
+so we have our task...now how do we delete it?  The filter method is the easiest way.
+
+todos.filter((todo) => todo.taskId != taskId)  
+
+This will return you an array of all tasks that DO NOT have this taskId.  Then you can just reassign that array to the todos variable.
+
+app.delete('/todos/:taskId', (req, res) => {
+  const taskId = req.params.taskId   // route parameter
+
+  todos = todos.filter((todo) => todo.taskId != taskId)
+
+  res.json({message: 'Task has been deleted!'})
+
+})
+
+When checking in Postman, be sure to go to the Delete tab.
+
+PUT/PATCH
+
+PUT replaces an entire entry, PATCH replaces just parts - you can use PUT to do the same thing as PATCH though.  On the server end, it's just app.put, then you can use the same functionality as the delete where you target an entry based on its ID, then you can change it and push it back.
+
+There are tools like nodemon that will automatically restart the server whenever you make changes in its file structure.
+
+To install:  npm install -g nodemon
+
+The -g stands for "global", which means you only have to install it once and you're done, not per-project like express and cors.
+
+You don't want to install express globally because it's project-dependent. You may well (especially later) be doing projects that use other things besides express. But tools like nodemon that apply for every project should be installed globally.
+
+Then when you want to run your app, just run it in the terminal as nodemon app.js (or whatever it's named) instead of node app.js.
+
+Packages like express/cors - if you move your entire project folder elsewhere in your directory, as long as you move the node modules file that's within it, you shouldn't have to reinstall. But if you've created an entirely new folder for a new project, you will need to reinstall those packages.
+
+- - - - - - 
+
+***Today's Topic: Server-Side Pages***
+
+Until now, the heavy-lifting for creating the user interface has been on the client side (building <li>s/<div>s etc.  But a server can return pre-built pages that all the browser needs to do is display it. These load much, much faster than client-side pages.  Can you imagine if the work of generating the Amazon.com frontpage from its JSON had to be done in your laptop's browser?
+
+Most websites these days have their initial page load as a server-side event. Then some portions of the page are left client-side (usually slideshows, hover zooming, etc.)  You can see the difference as you poke around Amazon or other sites. If the page refreshes entirely, it's made a server-side call to load an entirely new page. If a modal slides out or something like that, this is client-side.
+
+This mix-and-match is the solution seen everywhere these days.
+
+Now, we're returning a fully-formed HTML page to the client. How?
+
+We need to install yet another package - this time a template engine.  What is that?  
+If you notice Amazon.com, all their product pages are laid out in the same manner, they just contain different information. They have a product page template in which they inject images and information about different products.
+
+Let's install the Mustache express template engine:
+
+npm install mustache-express
+
+Then set it up:
+const express = require('express')
+const app = express()
+const mustacheExpress = require('mustache-express')
+
+app.engine('mustache', mustacheExpress())
+
+//pages are located in views directory
+app.set('views', './views')
+
+//extension for all the pages
+app.set('view engine', 'mustache')
+
+app.listen(3000, () => {
+  console.log('Server is running...')
+})
+
+Now we've told our code that all pages will be in the views folder...so we need to create a views folder within our project folder.
+
+We do NOT need a client-side folder if we are working with only server-side pages.
+
+Then within the views folder we can create a page:  index.mustache
+All mustache files will have the .mustache extension.
+
+So we'll make a basic index.mustache file:
+
+<html>
+<head></head>
+<body><h1>Index</h1></body>
+</html>
+
+Then to tell our server JS code how to show it:
+
+app.get('/', (req, res) => {
+  res.render('index')
+})
+
+So let's try to go to our URL:  localhost:3000
+And we can see our h1 showing up!
+
+Now...how do we pass information to the page?
+
+You can pass an object as a second argument to the .render function. 
+
+app.get('/', (req, res) => {
+  res.render('index', {productName: 'iPhone', price: 300})
+})
+
+Then we need to do something to display that data. So we go to our HTML and use Mustache syntax (double curly brackets around the key for the property you want to display).
+
+
+<html>
+<head></head>
+<body>
+<h1>Index</h1>
+
+{{productName}}
+
+</body>
+</html>
+
+
+Now our page shows the Index header as well as "iPhone" beneath.
+
+You can use Mustache syntax in the middle of sentences.  <p>I want to buy an {{productName}} which costs: ${{price}}.</p>
+
+Nodemon will not know to restart your server when you make HTML changes.  You can enter "rs" in the terminal to restart the server.
+
+ACTIVITY 1 - SERVER-SIDE 'HELLO WORLD'
+
+
+So what if we wanted to use this to display our to-do list?
+
+Same code as above, except:
+
+let tasks = [
+  {title: "wash the car", priority: "medium"},
+  {title: "feed the dog", priority: "high"}
+]
+
+
+app.get('/tasks', (req, res) => {
+  res.render('tasks', {allTasks: tasks}
+})
+
+//The first "tasks" here is the name of our page, the second is the array named 'tasks'.
+
+Now let's create a separate tasks.mustache file for our HTML.
+
+<html>
+<head></head>
+<body>
+<h1>Tasks</h1>
+
+{{allTasks}}
+
+</body>
+</html>
+
+Now on our page we see [object Object], [objectObject]. So we're making progress, but we need the actual information to display. How do we loop through our information?
+
+<html>
+<head></head>
+<body>
+<h1>Tasks</h1>
+
+{{#allTasks}}   //start of the loop
+
+  {{title}}
+
+
+{{/allTasks}}    //end of the loop
+
+</body>
+</html>
+
+Now we get:
+
+Wash the car Feed the dog
+
+So let's make this actually look how we want:
+
+<html>
+<head></head>
+<body>
+<h1>Tasks</h1>
+
+  <ul>
+    {{#allTasks}}   //start of the loop
+    <li>
+      {{title}} - {{priority}}
+    </li>
+    {{/allTasks}}    //end of the loop
+  </ul>
+
+</body>
+</html>
+
+
+The syntax will vary between different templating engines (Mustache vs Pug vs others), but the basic concepts are the same.
+
+What if we want to display the total number of tasks? How could we accomplish this?
+
+app.get('/tasks', (req, res) => {
+  res.render('tasks', {allTasks: tasks, totalTasks: tasks.length}
+})
+
+<html>
+<head></head>
+<body>
+<h1>Tasks</h1>
+<h2>Total Number of Tasks: {{totalTasks}}
+  <ul>
+    {{#allTasks}}   //start of the loop
+    <li>
+      {{title}} - {{priority}}
+    </li>
+    {{/allTasks}}    //end of the loop
+  </ul>
+
+</body>
+</html>
+
+How can we allow users to add new tasks? We could add text boxes and a button to our existing page, or start a new page. Let's go for the second option.
+
+app.get('add-task', (req, res) => {
+
+}
+
+<html>
+<head></head>
+<body>
+
+<h1>Add Task</h1>
+  <form method='POST' action='/create-task'>
+    <input type='text' placeholder='Enter task'>
+    <input type='text' placeholder='Enter priority'>
+    <button>Add</button>
+  </form>
+
+</body>
+</html>
+
+Now for server-side, we don't go the document.getElementById route. We need to submit this information to the server. To do this, we need a <form> element. You can see whenever you submit within a form element, it refreshes the page. But we need to tell the form *where* to submit those values.
+
+So we've added POST functionality, but in our server code, we don't have an app.post yet, so let's add it:
+
+app.post('/create-task', (req, res) => {
+  const title = req.body.title
+  const priority = req.body.priority
+  console.log(title)
+  console.log(priority)
+  res.send("")
+})
+
+Ok, this didn't really work. Why? When working with forms, you need the name property in your HTML in order for the textbox values to pass.
+
+<html>
+<head></head>
+<body>
+
+<h1>Add Task</h1>
+  <form method='POST' action='/create-task'>
+    <input type='text' placeholder='Enter task' name="title">
+    <input type='text' placeholder='Enter priority' name="priority">
+    <button>Add</button>
+  </form>
+
+</body>
+</html>
+
+Ok, now we can see that the values are sending, but we're still getting errors. In fact, we're getting the same error from this morning when we hadn't added the JSON parser...but we're not sending JSON.  However, we still need a parser:
+
+
+app.use(express.urlencoded())   //use to parse form-submitted values
+
+Now we can see this is working.  Remember when you console.log in server-side code, you'll see that on the terminal, not in the browser DevTools console.
+
+Now let's get our form data to add to our tasks array:
+
+app.post('/create-task', (req, res) => {
+  const title = req.body.title
+  const priority = req.body.priority
+  let task = {title: title, priority: priority}
+  tasks.push(task)
+  res.send("")
+})
+
+So what if we want to see the new list of tasks now that we've added one?  Can we jump to the route that we already have for displaying tasks?
+
+app.post('/create-task', (req, res) => {
+  const title = req.body.title
+  const priority = req.body.priority
+
+  let task = {title: title, priority: priority}
+  tasks.push(task)
+
+  res.redirect('/tasks')
+})
+
+We can see this in action. After adding a task, our page jumps back to the "/tasks" page and displays the new list.
+
+Debugging Tip - if you don't see the Form Data field with the info you want when you go to the Network tab in DevTools, there's no need to poke at your server-side code yet because the problem is happening in your HTML.
+
+Be sure to watch the Udemy Node course that Azam linked us to in Slack - if you're looking to add CSS to style Mustache pages, it operates somewhat differently than you would expect. We will get to that within our course in a couple of days.
+
+ACTIVITY 3 (skipping activity 2) - ADD CUSTOMER
+
+***Submitting Assignments***
+Add the node_modules folder to your .gitignore file so you don't submit that to GitHub.  But you can also search for common .gitignore files used by people who work a lot with JS, so you have an easy template to refer to in the future.
+
+But if we're not uploading the node_modules folder, how can someone download our code and get it to work?  They will need to run npm install to get the latest packages.

@@ -1,0 +1,49 @@
+
+
+
+body {
+  background-color:  rgba(0, 0, 0, 0.897);
+  color: rgb(252, 245, 233);
+  font-family: 'Shippori Mincho B1', serif;
+}
+
+
+
+.header {
+  padding: 60px;
+  text-align: center;
+  font-size: 35px;
+
+}
+
+.textBoxContainer {
+  padding: 30px;
+  display: flex;
+  justify-content: space-around;
+}
+
+#taskTextBox {
+  height: 45px;
+  width: 200px;
+  font-size: 18px;
+
+}
+
+.btnContainer {
+  padding-bottom: 60px;
+  height: 45px;
+  display: grid;
+
+  
+}
+
+button#addTaskButton {
+  font-size: 25px;
+}
+
+#tasksUL {
+  text-align: center;
+  font-size: 28px;
+  list-style-type: none;
+}
+

@@ -1,0 +1,16 @@
+<html>
+  <head></head>
+  <body>
+    <h1>Tasks</h1>
+    
+    <h3>Total number of tasks: {{totalTasks}}</h3>
+    <ul>
+      {{#allTasks}} <!--Start of the loop-->
+      <li>
+        {{title}} - {{priority}}
+      </li>
+      {{/allTasks}} <!--End of the loop-->
+    </ul>
+
+  </body>
+<html>

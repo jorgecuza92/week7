@@ -36,7 +36,9 @@ function getAllTasks() {
     .then(response => response.json())
     .then(todo => {
       const todoItems = todo.map((task) => {
-        return `<li>${task.title} - ${task.priority} - ${task.dateCreated}</li>
+        return `<li>Task: ${task.title}<br>
+                    Priority: ${task.priority}<br>
+                    Date: ${task.dateCreated}</li>
                 <button onclick="#">remove task</button>`
               
       })

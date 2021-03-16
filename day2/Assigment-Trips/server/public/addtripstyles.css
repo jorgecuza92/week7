@@ -1,0 +1,44 @@
+html { 
+  background: url(clouds.jpg) no-repeat center center fixed; 
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  font-family: monospace;
+}
+
+body {
+  align-items: center;
+
+
+}
+
+
+h1 {
+  padding: 30px;
+  text-align: center;
+}
+
+form {
+  text-align-last: center;
+}
+
+input {
+  height: 30px;
+  width: 200px;
+  font-family: monospace;
+  font-size: 16px;
+}
+
+button {
+  height: 40px;
+  width: 200px;
+}
+
+#departure {
+  font-size: smaller;
+}
+
+#arrival {
+  font-size: smaller;
+}

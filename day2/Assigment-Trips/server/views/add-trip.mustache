@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="addtripstyles.css">
+  <title>Trips</title>
+</head>
+<body>
+  <div class="container">
+  
+    <h1>Welcome to Trip Planner </h1>
+   
+      <form method="POST" action="/add-trip">
+        <image name="tripImage"></image>
+        <h4>add a destination: </h4>
+        <input type="text" placeholder="where to?" name="destination">
+        <h4>departure: </h4>
+        <input type="datetime-local" name="departure" id="departure">
+        <h4>arrival: </h4>
+        <input type="datetime-local" name="arrival" id="arrival">
+        <h4>add an image: </h4>
+        <input type='text' name='tripImage' id='tripImage' placeholder="paste image URL here">
+        <br><br><button>Add</button>
+      </form>
+ 
+    </div>
+</body>
+</html>

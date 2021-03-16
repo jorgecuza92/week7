@@ -31,8 +31,6 @@ app.delete('/todo/:title', (req,res) => {
   const title = req.params.title
 
   todo = todo.filter(task => task.title != title)
-  todo.delete(task)
-
   res.json({message: "Task has been deleted!"})
 
 })

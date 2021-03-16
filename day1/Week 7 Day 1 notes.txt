@@ -1,0 +1,240 @@
+WEEK 7 DAY 1
+
+These next two weeks will be the most important of the entire course - this is where you'll learn to create a full-stack application that draws from a database. After these two weeks, we'll begin the back-end project.
+
+All the JavaScript we've written so far has been client-side. Now we will move into server-side.
+
+Last week - we were sending a request to an API server and getting data back.
+
+The first step will be getting Node. You may have already installed it to get Surge working.  To check, in the terminal, type:
+
+node --version
+
+If it returns something like v14.blah.blah, you have it installed.  If not, go to nodejs.org and download the "recommended for most users" version (currently 14.16.0 LTS).
+
+***BEWARE***
+Whenever you are creating a project that has both a client and a server, make sure that you keep all files for each in completely separate files - one folder for client stuff, one for server stuff.
+
+Go wherever you want within your file structure and create an overall folder for your project, then a folder specifically for your server files. Navigate within that server folder inside your terminal as well, and run the command:
+
+npm init
+
+This will initialize your Node application.  It will ask the name of the package you're building. By default, it will take the name of the folder it's currently in, or you can give it a new name at this point.  You can take the default settings for the rest of the questions it asks as well; just keep hitting Enter. This will create a package.json file.  Within this file, there is a category labeled "main" with a value of "index.js".  If you are not planning to call your main JS file "index.js", change this value to the name you plan to use. 
+
+Where do you look at/debug server-side code? It won't be in the browser/DevTools like for client-side code. It's in the terminal like how we ran python programs. If you create a file with a console.log("Hello Node"), and enter in the terminal:
+
+node app.js    (assuming your file is called app.js)
+
+You will see "Hello Node" printed on the terminal.
+
+So...how do we have our client-side code access this? When we were calling out to someone else's server, we used fetch and the URL. But we don't really have a URL here...at least not yet.
+
+On the Node website, there is an "about" page with some code, and if you paste that into your app.js file, it will make it work as a server. BUT we are going to use a separate package called Express.
+
+Go to your terminal, and that within your terminal, you're in the same server folder that contains your package.json file.  Enter the command:
+
+npm install express
+
+The documentation for Express is available at expressjs.com.
+
+Then in your app.js file, the only code you need is:
+
+const express = require('express')
+
+If you then console.log(express), you can see it prints a function. We have effectively imported express into our code. 
+
+Now let's call it as a function and print that:
+const app = express()
+console.log(app)
+
+This returns a function again, but with a whole other set of properties/functions you can use to call the server.
+
+This variable, the one that calls the express function, is what you'll use to call the server. You can name it whatever you want, but most people call it "app".
+
+The setup we're learning today will require a lot of practice to get comfortable with.
+
+Starting the server:
+app.listen(3000, () => {
+  console.log("Server is running...")
+})
+
+If we go to localhost:3000 right now, we get the message "Cannot GET /".  If we go to localhost:4000 we get a "page not found" error. These are very different - why?
+
+It sees that the server is running on 3000; it's just that the server is not returning anything.
+
+ROOT URL - abc.com  vs abc.com/sports
+
+Express is helpful in quickly creating endpoints (aka URLs).
+
+So let's get our server to actually return something.
+
+app.get("/", (req, res) => {
+  do something
+})
+
+"/" means the root URL. "req" is request, "res" is response - req/res can be anything but are usually given these names.
+
+app.get("/", (req, res) => {
+  res.send("Hello, World!")
+})
+
+Now we get the response showing when we go to localhost:3000 in the browser.
+
+What if we want to change the URL? localhost:3000/greet  instead of just localhost:3000?
+
+app.get("/greet", (req,res) => {
+  res.send("Hey, there!")
+}
+
+Any time you add new code, you'll need to stop and restart the server to apply it. Stop the server by entering ctrl-C in your terminal, and restart it by running:
+node app.js  (or whatever your JS file is named)
+
+How do we return JSON from these .get functions?
+
+app.get("/movie", (req, res) => {
+  res.json({name: "Blazing Saddles", year: 1974, director: "Mel Brooks"})
+})
+
+What if we create a variable within our .get code but forget to include the response?  The client-side will see an Error page with a spinner running as it waits on a response. So remember to always include your response!
+
+ACTIVITY 1 - Hello Express - Create a route "/name" in Express, which will return firstname and lastname as a JSON response.
+
+
+You can drill down/nest things with your URLs (e.g., "movies/comedy/2010").  But what if we have 50 different categories? We don't want to hard-code all of that. How can we make this better without creating 100 different URLs?
+
+***ROUTE PARAMETERS***
+
+app.get("/movies/:genre", (req, res) => {
+ do something
+})
+
+This will match any URL that starts with /movies:
+/movies/action
+/movies/comedy
+/movies/Azam
+/movies/supercalifragilisticexpialidocious
+
+app.get("/movies/:genre", (req, res) => {
+  let genre = req.params.genre
+  res/send(genre)
+})
+
+The section after the colon can be named anything you want. This creates a params object with that name. It could be called genre, category, Bob, whatever.
+
+How can we limit our display to show just those of the selected genre?
+
+movies = [{name: "Batman", genre: "Action"}, {name: "Finding Nemo": genre: "Kids"}]
+
+app.get("/movies/:genre", (req, res) => {
+  const genre = req.params.genre
+  const filteredMovies = movies.filter(movie) => {
+    return movie.genre.toLowerCase() == genre
+  })
+  
+  res.json(filteredMovies)
+})
+
+
+You can use this same method to filter by multiple categories.
+
+app.get("/movies/:genre/year/:year", (req, res) [> {
+  const genre = req.params.genre
+  const year = req.params.year
+  res.json({genre: genre, year: year})
+})
+
+This will work for /movies/action/year/2020, but NOT
+for movies/action/2020. Whatever you've included in your app.get URL template must be included. If it said /movies/:genre/cake/:year, the URL would have to include "cake".
+
+ACTIVITY 2 - Route Parameters - Create a route "/digital-crafts/cohort/:year", where the user can pass in the year as a route parameter.
+
+***POST REQUESTS***
+
+What if we want to let the user add a movie to our database?
+
+app.post("/movies", (req, res) => {
+  const name = req.body.name
+  const genre = req.body.genre
+  
+  res.json({name: name, genre: genre})  
+})
+
+So how do we check that our POST request works the way we expect it to work? If we put the URL in, it will do a GET request.
+
+Postman to the rescue! (or another similar tool)
+
+Make sure you have POST request selected. In the header section, we should have "Content-Type", "application/json".
+
+We also need to tell express how to parse the JSON body of the POST request it receives:
+app.use(express.json())
+
+So now we are getting the POST request properly. What do we want to do with it? Let's say we want to add it to a movies array and send the user a response that we got it.
+
+
+app.post("/movies", (req, res) => {
+  const name = req.body.name
+  const genre = req.body.genre
+  
+  const movie = {name: name, genre: genre}
+  movies.push(movie)
+
+  res.json({name: name, genre: genre})  
+
+  res.send().statusCode(200)
+  (or if you want you could send res.json({message: "Movie has been added."})
+
+})
+
+
+Now, normal users aren't going to be using Postman, they'll be using an interface you create. So let's do that. Within your project folder but OUTSIDE your SERVER folder, create a client folder. 
+
+Make sure your server is running before you get started.
+
+To avoid CORS issues, we need to install and use another package:
+
+npm install cors
+
+Then in our server-side code:
+
+const cors = require('cors')
+
+app.use(cors())
+
+The client-side code will be the same thing we've been doing for the last couple of weeks. Fetch, then turn the response into HTML that is then inserted into a placeholder <div> or <ul> we've already created.
+
+Remember the structure of a POST request:
+
+fetch('http://localhost:3000/movies', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  }, 
+  body: JSON.stringify({
+    name: name,
+    genre: genre
+  })
+  }).then(response => response.json())
+    console.log(result)
+  })
+
+})
+
+
+ASSIGNMENT: To-Do List Using Node
+
+- Get all to-do items
+- Save a new item
+- Each will consist of task, priority, and date created
+
+Hard Mode:
+Delete
+Update existing item
+Create a class for to-do items
+
+
+Start by hard-coding a couple to-do list items and try to display them on the screen. Take small steps and check along the way because now you are controlling both client and server.
+Start with just the hard-coded display, then get the client to display items. Then implement the POST bit on the server, check in Postman that it works. Then move back to the client-side. You don't want to have multiple possible points of failure when you're trying to chase down an error.ccopen
+
+When you stop your server with ctrl-C, items will no longer persist. Next week we will add databases, which will store data even when the server is not running.
+
+Azam's backend Udemy course - he is sharing a code to make course free - sign up today because code will expire in 2 days.  Stay current with what we're doing in class, but it will go into further detail than we'll get to in the class - partials, mongoDB, etc.  (Wait to watch the mongoDB part until after next week.)
