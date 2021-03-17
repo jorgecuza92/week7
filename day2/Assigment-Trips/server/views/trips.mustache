@@ -10,15 +10,17 @@
     <h1>Trips</h1>
       <ul>
         {{#allTrips}}
-        <form>
+        <form method="POST" action="/delete-task">
           
           <li>
+            <input type="hidden" value={{taskId}} name="taskId">
             <img src="{{tripImage}}" alt="trip pic">
             <label>{{destination}}</label>
             <label>{{departure}}</label>
             <label>{{arrival}}</label>
             <button>delete</button>
           </li>
+
         </form>
         {{/allTrips}}
       </ul>

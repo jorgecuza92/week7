@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const mustacheExpress = require('mustache-express')
+const { v4: uuidv4 } = require('uuid');
 
 // setting up mustache as template engine
 app.engine('mustache', mustacheExpress())
@@ -21,13 +22,22 @@ app.post('/add-trip', (req,res) => {
   const departure = req.body.departure
   const arrival = req.body.arrival
   
-  let trip = {tripImage: tripImage, destination: destination, departure: departure, arrival: arrival}
+  let trip = {tripImage: tripImage, destination: destination, departure: departure, arrival: arrival, taskId: uuidv4()}
   trips.push(trip)
 
   res.redirect('/trips')
 })
 
+app.post('/delete-task', (req,res) => {
+  const taskId = req.body.taskId
 
+  trips = trips.filter((trip) => {
+    return trip.taskId != taskId
+  })
+
+  res.redirect("/trips")
+
+})
 
 app.get('/add-trip', (req,res) => {
   res.render('add-trip')
