@@ -1,0 +1,349 @@
+WEEK 7 DAY 3 NOTES
+
+Live Share for Assignment
+
+
+const express = require('express')
+const app = express()
+const mustacheExpress = require('mustache-express')
+
+const PORT = 3000
+
+Our basic starting point:
+
+// setting up Express to use Mustache Express as template pages 
+app.engine('mustache', mustacheExpress())
+    // the pages are located in views directory
+app.set('views', './views')
+    // extension will be .mustache
+app.set('view engine', 'mustache')
+
+
+
+app.listen(PORT, () => {
+    console.log('Server is running...')
+})
+
+How do we render the index page?
+
+app.get("/", (req, res) => {
+    res.render("index")
+})
+
+
+How do we render the trips? Well, first let's hardcode a few trips and then try to display them.
+
+let trips = [
+    { name: "Denver" },
+    { name: "Houston" },
+    { name: "Austin" }
+]
+
+app.get"/", (req, res) =. {
+  res.render("index", {trips:trips})
+})
+
+The date to be displayed should always be passed to the render function as an object. The first "trips" is a property, and can really be called whatever you want. The second "trips" is the data, and refers to our trips array.
+
+So now let's move to our mustache HTML:
+
+<html>
+    <head></head>
+    <body>
+        <h1>Trips</h1>
+
+        {{#trips}} <!-- Start of the loop -->    
+
+            {{name}}
+
+        {{/trips}} <!-- End of the loop --> 
+
+
+    </body>
+</html>
+
+You can add whatever HTML you want to make this display look nice.
+
+So far all our trips are hard-coded; what if our trips array was empty?  Nothing would be displayed. There's a way in Mustache to display something else if that array is empty. You don't have to, but this is so you have the option.
+
+{{^trips}}
+  No trips available!
+{{/trips}}
+
+So the caret essentially means "no trips".  Include this in your Mustache HTML anywhere below the original loop. It functions kinda like an "else" condition.
+
+Okay, now how do we let a user add a trip?
+
+Mustache HTML:
+
+<h2> Add a Trip</h2>
+<form method="POST"  action="/add-trip">
+<input type="text" placeholder="Destination" name="destination">
+<button>Add Trip</button>
+</form>
+
+Don't forget to put your inputs/button in a form element, and to give your input a name!
+
+Now back in our app.js file we need to add a route that adds a trip.  Since we're posting, we'll also need to set up the body parser.
+
+app.use(express.urlencoded())
+
+app.post("/add-trip", (req, res) => {
+  let destination = req.body.destination
+  let trip = {destination: destination}
+  trips.push(trip)
+  res.redirect("/")
+}) 
+
+Question from Summer: Why do we need to redirect?
+Per Azam: We have to give some kind of response or the client will keep waiting on us like we haven't picked up a phone call (in the pre-voicemail days).  So showing the list of trips makes the most sense as a response, and we already did that on our index page, so we just redirect there. But instead we could just return a "Trip added" message if we wanted. (res.send({message: "Trip has been added!"})
+
+We could also return JSON if we wanted to; this would require a different route.
+
+app.get("/api/trips"), (req, res) => {
+  res.json(trips)
+})
+
+With just these 3 lines, anyone can access your data and display it on their own site. This is incredibly powerful. (Obviously shouldn't be used for things like banking or health data.)
+
+So how do we point to a specific trip to display more info about it, update it, or delete it? We'll need to add an ID.
+
+First create a Mustache file called trip-details.mustache:
+
+<html>
+<head></head>
+<body>
+<h1>Trip Details</h1>
+<h1>{{name}}</h1>
+</body>
+</html>
+
+In the terminal: npm install uuid
+
+In app.js file:
+app.get('/unique', (req,res) => {
+    res.send(uuidv4())
+})
+
+Now we need to update our trip object under post to add a tripId field, as well as add tripIds to our hard-coded trips.
+
+Under app.post('/add-trip', (req, res) => {
+let trip = {tripId: uuidv4(), destination: destination}
+
+Then in our hard-coded trips:
+let trips = [
+    { name: "Denver", tripId: 1},
+    { name: "Houston", tripId: 2},
+    { name: "Austin", tripId: 3}
+]
+
+app.get("/trip-details/:tripId", (req, res) => {
+  const tripId = req.params.tripId
+  let trip = trips.find(trip) => trip.tripId == tripId)  
+  
+  res.render("trip-details", trip)  //don't need to pass as object b/c "trip" is already an object.
+
+})
+
+So now we can also use this to update a trip:
+
+In the Mustache trip-details page:
+<form method="POST" action="/update-trip">
+  <input type=text" value={{tripId}} name="tripId" hidden/>
+  <input type="text" value="{{name}}" name="tripName"/>
+  <button>Update</button>
+</form>
+
+(Remember to provide names! Those fields' values won't be sent if they don't have a name.)
+
+Question from William: Why does the hidden tripId element need to be an input field, rather than just a <label> or <p> element?
+Per Azam: It needs to be an input field in order to be submitted by the form.
+
+Now in our app.js, we need to create an update-trip route:
+
+app.post("/update-trip", (req, res) => {
+  const tripId = parseInt(req.body.tripId)
+  const destination = req.body.destination
+
+  let trip = trips.find(trip) => trip.tripId == tripId
+  trip.name = name     
+  // this ^^ is all we need to update that field; we don't need to do a push or anything. It will update the name of the trip in the original array.
+
+  res.redirect("/")
+})
+
+Question from Katherine:
+
+What happens if someone hits Submit without entering an update value?  
+
+Per Azam: With the code we have now, it will update the field with a blank value. There are a number of ways to validate the inputs on the server side, but the easiest way to avoid this problem is just to make the input required in the HTML.
+
+<input type="text" value={{name}} name="tripName" required/>
+
+
+
+***ROUTING***
+
+We now have so many routes in our app.js file! We have routes to show all the trips, add a new trip, update a trip, we would likely expand this to add a user...you can see how this can grow out of control.
+
+We can instead move all the routes to a separate file called routes or trips or something and then point to it. You can have more than one file like this. For a robust version of this site, we might have a trips.js with all the routes to add/update/show/delete a trip, and a users.js file with all the routes relating to add/update/show/delete user data.
+
+Once we've done this, all requests for //localhost/3000/trips -- 
+
+
+Open new trips.js file and start with:
+
+const express = require('express')
+const router = express.Router()
+
+router.get("/", (req, res) => {
+  res.send("Show All Trips Page")
+})
+
+module.exports = router   //this is an instance of a Router object
+
+
+in our app.js:
+
+const tripsRouter = require('./routes/trips')
+
+
+What if we wanted to build a Cat object and use it in our app.js file?
+
+class Cat {
+  constructor() {
+    this.something
+  }
+}
+
+module.exports = cat
+
+Then to import it in our app.js code, we need;
+
+const Cat = require('./models/cat')
+
+
+So to be able to use the tripsRouter we brought in, we need:
+
+app.use("/trips", tripsRouter)   
+
+This points any request from //localhost:3000/trips to tripsRouter:
+//localhost:3000/trips
+//localhost:3000/trips/1
+//localhost:3000/trips/add-trip
+//localhost:3000/trips/update-trip
+
+The trips.js then handles all the rendering/displaying. Any such sub-file like this is going to need its own const express = require('express') variable.
+
+now we can add our first route that we commented out of our main app.js file:
+
+app.get("/", (req, res) => {
+  res.render("index", {trips:trips}
+})
+
+BUT we're going to need some changes!  to start with, it needs to be router.get instead of app.get, and the trips array we were working with is back in app.js. So we'll need to make that a global variable in order to make that available in all routes.
+
+in trips.js:
+
+router.get("/", (req, res) => {
+  res.render("index", {trips:trips})
+})
+
+
+
+
+in app.js:
+
+global.trips = [
+    { name: "Denver", tripId: 1},
+    { name: "Houston", tripId: 2},
+    { name: "Austin", tripId: 3}
+]
+
+
+With all these moving parts, we want to make changes slowly and check each step to be sure it's working before moving on to the next.
+
+Let's move the POST route in:
+
+router.post("/add-trip", (req, res) => {
+  let name = req.body.tripName
+  let trip = {name: name, tripId: uuidv4()}
+  trips.push(trip)
+
+  res.redirect("/")
+
+})
+
+This is giving us a "cannot POST" error. Why? Our form is pointing to localhost:3000/add-trip, not localhost:3000/trips/add-trip.  So let's change that:
+
+<form method="POST" action="/trips/add-trip">
+
+
+For each step as we move routes out to our separate file, we'll need to adjust wherever we've hard-coded routes in our HTML. This will be easier when we start building an app that is modularized out like this from the start.
+
+Most people will create an indexRouter for the landing page, registration, etc.
+app.use("/", indexRouter)
+
+
+So we create an index.js:
+const express = require('express')
+const router = express.Router()
+
+router.get("/", (req,res) => {
+  res.render("home")
+})
+
+module.exports = router
+
+let's make a home.html
+<h1>Home</h1>
+
+
+Then in app.js:
+const indexRouter = require('./routes/index')
+
+
+
+In your app.js, be sure to have your app.use(express.urlencoded()) line ABOVE any of your app.use("/", indexRouter), app.use("/trips", tripsRouter) or anything like that. The request passes through the urlencoded, then to the index page, then to the other pages.  This function serves as middleware, which we'll talk more about later.
+
+
+ACTIVITY 1 - Create Express router called "trips.js". This router will handle the following routes:
+
+/trips - User should see <h1>Trips</h1> on the page 
+/trips/houston (houston is a route parameter) - User should see <h1>Houston</h1> on the page 
+
+
+***USING CSS WITH MUSTACHE***
+
+Create a folder, call it CSS or call it Resources, something like that
+
+Then create a styles.css folder and add a background color to the body so you can see it's being applied.
+
+Then in your app.js folder, add this:
+app.use(express.static("css"))           // or whatever you named that folder
+
+You are telling your file that everything inside that folder is available at the root level. 
+Meaning localhost:3000. So your "path" is just a slash before the name.
+
+<link rel="stylesheet" href="/trip-styles.css" />
+
+
+***ALIAS***
+You can make your URLs look "more organized" with an alias.
+
+app.use("/myawesomestyles", express.static("css"))
+
+^^This will make the URL for your CSS become localhost:3000/myawesomestyles/trip-style.css
+
+If you do this, then you'll need to change the link in your Mustache page to 
+<link rel="stylesheet" href="/myawesomestyles/trip-styles.css" />
+
+Question per Katherine:  Why do we care about how URLs appear?
+Per Azam: It helps when Google is crawling your site to rank it in search results.
+
+
+Express documentation on linking static files:
+https://expressjs.com/en/starter/static-files.html
+
+
+For the rest of the time we're working with backend stuff, you can start from scratch with the listed assignment if you want. BUT you can also work with the previous assignment and modify it to include those new features.  Next week specifically, each day's assignment will be building a new part of an overall app.

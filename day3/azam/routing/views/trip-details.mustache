@@ -1,0 +1,17 @@
+
+
+<html>
+    <head></head>
+    <body>
+        <h1>Trip Details</h1>
+
+        <h1>{{name}}</h1>
+
+        <form method = "POST" action = "/trips/update-trip">
+            <input type="hidden" value = {{tripId}} name = "tripId" />
+            <input type="text" value="{{name}}" name = "tripName" required />
+            <button>Update</button>
+        </form>
+
+    </body>
+</html>

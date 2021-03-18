@@ -1,0 +1,34 @@
+
+<html>
+    <head>
+        <link rel="stylesheet" href="/css/trip-styles.css" />
+    </head>
+    <body>
+        <h1>Trips</h1>
+
+        <ul>
+        {{#trips}} <!-- Start of the loop -->    
+            <li>
+                <label>{{name}}</label>
+                <a href="/trips/{{tripId}}">
+                    <button>Details</button>
+                </a>
+            </li>
+
+        {{/trips}} <!-- End of the loop --> 
+        </ul>
+
+        <!-- Run when no trips are available or when trips array is empty -->
+        {{^trips}}
+            No trips available! 
+        {{/trips}}
+
+        <h2>Add a Trip</h2>
+        <form method = "POST" action = "/trips/add-trip">
+            <input type="text" placeholder="Trip name" name="tripName" />
+            <button>Add Trip</button>
+        </form>
+
+
+    </body>
+</html>
