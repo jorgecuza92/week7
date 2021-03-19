@@ -2,13 +2,11 @@ const express = require('express')
 const app = express()
 const mustacheExpress = require('mustache-express')
 const session = require('express-session')
-const authenticate = require('../authentication/auth') // import authentication function
+const authenticate = require('./authentication/auth') // import authentication function
 const { v4: uuidv4 } = require('uuid');
+const http = require('http').Server(app)
+const io = require('socket.io')(http)
 
-// function helloMiddleware(req,res,next) {
-//   console.log('Hello Middleware')
-//   next() // continue with original request 
-// }
 
 
 // setting up mustache as template engine
@@ -24,6 +22,7 @@ app.use(session({
   secret: 'THISISSECRETKEY',
   saveUnitialized: true
 }))
+app.use('/js',express.static('js'))
 
 
 // app.use(authenticate)
@@ -31,7 +30,25 @@ let trips = []
 
 global.users = []
 
+//chat
+app.get('/chat', (req,res) => {
+  console.log(__dirname)
+  res.sendFile(__dirname + '/chat.html')
+})
 
+io.on('connection', (socket) => {
+  console.log('User connected!')
+
+  socket.on('disconnect', () => {
+      console.log('User disconnected!')
+  })
+
+
+  socket.on('Houston', (chat) => {
+      io.emit('Houston', chat)
+  })
+
+})
 
 // allow user to register
 app.get('/register', (req, res) => {
@@ -133,6 +150,10 @@ app.post('/delete-task', (req, res) => {
 
 
 
-app.listen(3000, () => {
-  console.log('Server is running...')
+// app.listen(3000, () => {
+//   console.log('Server is running...')
+// })
+
+http.listen(3000, () =>{
+  console.log("Server is running...")
 })

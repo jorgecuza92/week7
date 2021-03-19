@@ -1,0 +1,23 @@
+<html>
+    <head>
+
+    </head>
+    <body>
+
+        <h1>Chat</h1>
+
+        <input type="text" placeholder="Enter username" id="usernameTextBox" />
+        <input type="text" placeholder="Enter message" id="chatMessageTextBox" />
+        <button id="sendButton">Send</button>
+
+        <ul id="messagesUL">
+
+        </ul>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var socket = io() 
+        </script>
+        <script src="/js/client.js"></script>
+    </body>
+</html>

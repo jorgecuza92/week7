@@ -1,0 +1,356 @@
+Week 7 Day 4 Notes
+
+
+Review of yesterday's assignment:
+
+Watch variable names, make sure they will be clear to someone reading behind you.
+
+Do your best to do the homework; it will make the projects much easier. 
+
+Question from Neil - is there a limit on how many functions can be within one router?
+Per Azam - there's no functional limit; you could put everything directly within app.js if you wanted. But if you get like 50+ functions within one router, splitting them might be easier just for readability.
+
+***SESSIONS***
+
+Imagine a client requesting information from a server that's been customized to a specific user. The server has no idea who you are when you first make a request. You need a username/login to identify your connection -- sessions are somewhat similar to this. If you've ever searched for hotels for an impending trip, and then gone to other sites and noticed those same hotels being advertised to you, it's because that hotel search site sent you a session cookie that is being noticed that contains those search results.   Similarly, if you search for something on Amazon, close your browser, and come back a few hours later, you can see those items under your recent searches still.
+
+The session keeps your identifying connection to the server alive. 
+
+
+So let's give this a try. Imagine we have two routes set up:
+
+app.get('/movies', (req, res) => {
+  res.send("Movies")
+})
+
+app.get('tv-shows', (req, res) => {
+  res.send("TV Shows")
+})
+
+These two requests are independent of one another. If you add a username under one, and try to console.log that same username under the other, nothing happens.
+
+To use sessions, we need to install Express Session:
+
+npm install express-session
+
+Then we need to set it up so it can be used, in app.js:
+const session = require('express-session')
+
+app.use(session {
+  secret: 'THISISSECRETKEY'
+  saveUninitialized: true
+}))
+
+A secret should not be easy to guess, but for now while learning we can make it whatever.  Each session should generate a unique secret.
+
+saveUninitialized can be true or false, whichever you want. This basically indicates whether you want to save a cookie even if there is no data in it yet (no username added or anything like that). We'll have it be true for now.
+
+Let's set up the login:
+app.post('/login', (req, res) => {
+  const username = req.body.username
+  const password = req.body.password
+})
+
+The username can be used to uniquely identify the user (provided you required a unique username on signup as basically everywhere does).
+
+So if that person is trying to access, say, their bank accounts or profile:
+
+app.get('/bank-accounts', (req,res) => {
+
+})
+
+app.get('/profile', (req, res) => {
+
+})
+
+We'll need their username, right? Well, within the login, we can add their username to the session to use throughout the site. First we need to check if the session exists with if(req.session), then we'll add it.
+
+
+app.post('/login', (req, res) => {
+  const username = req.body.username
+  const password = req.body.password
+
+  if(req.session) {
+    req.session.username = username
+  }
+})
+
+Then within our bank account route:
+
+app.get('/bank-accounts', (req,res) => {
+  const username = req.session.username
+})
+
+So let's see this in action. First we'll create an array of users:
+
+let users = [
+  {username: 'johndoe', password: 'password'},
+  {username: 'marydoe', password: 'password'}
+]
+
+Then in views, we'll create a login.mustache page:
+
+<html>
+<head></head>
+<body>
+
+  <form method="POST", action="/login">
+  <input type="text" placeholder="username" name="username">
+  <input type="password" placeholder="password" name="password">
+  <button>Login</button>
+  </form>
+
+</body>
+</html>
+
+
+Now we need to go back to app.js and create an app.get route to display the login page:
+
+app.get('/login', (req, res) => {
+  res.render('login')
+})
+
+app.post('/login', (req, res) => {
+  const username = req.body.username
+  const password = req.body.password
+
+  if(req.session) {
+    req.session.username = username
+  }
+
+  console.log(username, password)
+
+  res.send("ok")
+})
+
+If we now run this, we get OK when the login page renders and we can see the username and password are being sent. So now what? We probably want to check the submitted username and password against our list of users, right?
+
+app.post('/login', (req, res) => {
+  const username = req.body.username
+  const password = req.body.password
+
+  const persistedUser = users.find((user) => {
+    return user.username == username && user.password == password
+  }
+
+  if(req.session) {
+    req.session.username = username
+  }
+
+  console.log(persistedUser)
+
+  res.send("ok")
+})
+
+If we send something that doesn't match with any of the users in the users array, the find function returns "undefined". So our next step should check that the person authenticated successfully and put in something to uniquely identify that user. So we'll move the session check under the authentication check.
+
+app.post('/login', (req, res) => {
+  const username = req.body.username
+  const password = req.body.password
+
+  const persistedUser = users.find((user) => {
+    return user.username == username && user.password == password
+  }
+
+  if(persistedUser {
+    if(req.session) {
+      req.session.username = username
+    }
+  }
+
+
+})
+
+What should we do if the username and/or password are incorrect? We should render the same page but also displaying an error message.
+
+app.post('/login', (req, res) => {
+  const username = req.body.username
+  const password = req.body.password
+
+  const persistedUser = users.find((user) => {
+    return user.username == username && user.password == password
+  }
+
+  if(persistedUser {
+    if(req.session) {
+      req.session.username = username
+    }
+  } else {
+    res.render("/login", {message: "Username or password is incorrect!"}
+    }
+
+})
+
+So we need to do something with a correct login besides just add their username to the session. Where do we want to send them? Maybe their profile page?
+
+app.post('/login', (req, res) => {
+  const username = req.body.username
+  const password = req.body.password
+
+  const persistedUser = users.find((user) => {
+    return user.username == username && user.password == password
+  }
+
+  if(persistedUser {
+    if(req.session) {
+      req.session.username = username
+      res.redirect('/profile')
+    }
+  } else {
+    res.render("/login", {message: "Username or password is incorrect!"}
+    }
+
+})
+
+So let's create a profile.mustache page in views, and then make an app.get to show the profile page:
+
+app.get('/profile', (req,res) => {
+   res.render('profile')
+})
+
+Maybe we want to display a welcome-back message on the profile page that displays the person's username.  We can get it back out of the session.
+
+app.get('/profile', (req,res) => {
+   res.render('profile', {username: username})
+})
+
+On profile.mustache:
+<h1>Welcome back, {{username}}!</h1>
+
+
+***COOKIES***
+
+At this point, if we refresh, it still shows the username? Why? Because we now have a cookie stored. Where can we see that?  In Dev Tools, under Application, Cookies will be under Storage on the left. So you can see the cookie listed there. If we click on it and delete it, then refresh the page, the username disappears from the header.
+
+ACTIVITY 2 (we'll start with 2 instead of 1) - you can add a new page to your existing app.
+Ask for the user's name and age, then when they submit the form, place them in the request session, then take the user to a different page where their name and age are displayed on the page.
+
+Question from Shawn - should all the login routes be in app.js?
+Per Azam - usually people create an index route file for all of this, or a users route.  But for this activity, you can write everything in app.js.
+
+The session is not a database! Put the minimum amount of things in there that you need, and don't put anything sensitive in there like a password or bank account info. Just the minimum needed to pull up user-customized information.
+
+
+***MIDDLEWARE***
+
+Let's create a bank-accounts.mustache page, and a route to display that page:
+mustache:
+<h1>These are my bank accounts</h1>
+
+app.js:
+app.get('/bank-accounts', (req, res) => {
+  res.render('bank-accounts')
+})
+
+This will load right now and display the page. How can we restrict it to only displaying to a specific username?
+
+app.get('/bank-accounts', (req, res) => {
+
+  if(req.session) {
+    if(req.session.username {
+      res.render('bank-accounts')
+    } else {
+        res.redirect('/login')
+    }
+  } else {
+      res.redirect('/login')
+})
+
+So this keeps the bank account page from loading unless there is a session with a username stored. If there is no session, or no username in the session, it routes back to the login page instead.
+
+We probably want to restrict the profile page in this manner too, right? But that's a lot of code to copy/paste for each route that you want to restrict to logged-in users.  We can use middleware for that!
+
+You can write custom middleware; it's not that difficult.  Let's create one:
+
+Middleware is a function that takes three arguments - request, response, and next.
+
+function helloMiddleware(req, res, next) {
+  console.log("Hello Middleware")
+}
+
+app.use(helloMiddleware)  //here we are registering the middleware so a request must pass through it
+
+
+So with what we've done, let's try to load a page.  But it gets stuck trying to load. Why?  We didn't tell the request where to go next after it passed through our middleware. We can fix this with next() to make it continue with the next middleware or (if it was the last middleware in the path) the original request.
+
+function helloMiddleware(req, res, next) {
+  console.log("Hello Middleware")
+  next()
+}
+
+This means that every request that comes in can pass through our authentication middleware.  
+
+function authenticate(req, res, next) {
+  if(req.session) {
+    if(req.session.username) {
+      next()
+    } else {
+        res.redirect('/login')
+      }
+  } else {
+      res.redirect('login')
+    }
+}
+
+But wait...we don't want EVERY request to pass through...what about the initial landing page? An "about us" page if you have one?  We only want certain requests to go through the middleware - probably bank-accounts, maybe profile, etc.
+
+So let's call the middleware on the bank-accounts request:
+
+app.get('/bank-accounts', authenticate, (req, res) => {
+  res.render('bank-accounts')
+})
+
+And the profile request: 
+app.get('/profile', authenticate, (req, res) => {
+  const username = req.body.username
+  res.render('profile', {username: username})
+})
+
+
+What would happen if we tried to add authentication to our original landing page? It wouldn't load.
+
+There's also a way to use Express to protect entire routes rather than individual requests.  What if there were an admin route for our page?
+
+const express = require('express')
+const router = express.Router()
+
+router.get('/', (req, res) => {
+  res.send("Admin")
+})
+
+router.get('/revenue', (req, res) => {
+  res.send("Revenue")
+})
+
+router.get('/dashboard', (req, res) => {
+  res.send("Dashboard")
+})
+
+module.exports = router
+
+So back on our app.js page, we need to import the router:
+const adminRouter = require('/routes/admin')
+
+app.use('/admin', authenticate, adminRouter)
+
+Make sure your app.use for your routers is listed AFTER the urlencoded and the session middlewares so that they can use both. The authenticate middleware should be listed as the second argument for any route that you want to protect.
+
+You can also move your authentication into a completely separate file - auth.js.  Then you'll need to export it so it can be imported in our main code.
+
+At the end of auth.js:
+module.exports = authenticate
+
+In app.js:
+
+const authenticate = require('./authentication/auth')
+That's all we need to do to import that function.
+
+Within app.js, you could name this variable whatever you want ("cat" would work fine), but people generally keep the same name for consistency and to minimize confusion.  Within auth.js, on the module.exports line, the name needs to be the same as the function name. This is because it's looking for a function by that name when exporting. You could have multiple functions within that file. Later we'll look at how we could have multiple functions in a file and how to export that (it's a bit trickier).
+
+Question from Neil - how would our system know that an admin has logged in as opposed to a regular user.
+Per Azam - right now, it doesn't; we'd have to build out further functionality for that.
+
+***ASSIGNMENT***
+You can start with Activity 1 if you want - this is to create a POST that increments a counter that's saved to the session. It seems easy but is actually somewhat tricky.
+
+Day 4 Assigment - continue with either the movies app or the trips app.  Add login and registration to it.  Research how to sign out, and how to allow the user to only see their trips after they login successfully.
